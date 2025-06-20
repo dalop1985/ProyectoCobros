@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Actualización de Credenciales</title>
+    <style>
+        /* Mismo estilo que bienvenida.html */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Sistema de Cobros Municipales</h1>
+        </div>
+
+        <div class="content">
+            <p>Hola <strong>{{ nombre_completo }}</strong>,</p>
+            <p>Sus credenciales de acceso al Sistema de Cobros Municipales han sido actualizadas.</p>
+
+            <div class="credentials">
+                <p>Sus nuevas credenciales son:</p>
+                <p><strong>Usuario:</strong> {{ usuario }}</p>
+                <p><strong>Contraseña temporal:</strong> {{ password }}</p>
+            </div>
+
+            <p>Puede acceder al sistema en:</p>
+            <p><a href="{{ login_url }}">{{ login_url }}</a></p>
+
+            <p class="warning">⚠️ Importante:</p>
+            <ul>
+                <li>Esta contraseña es temporal y debe cambiarla en su próximo acceso</li>
+                <li>No comparta sus credenciales con nadie</li>
+                <li>Usted es responsable del uso que se dé a su cuenta</li>
+                <li>Cualquier actividad sospechosa debe ser reportada inmediatamente</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p>Atentamente,</p>
+            <p><strong>Administrador del Sistema</strong></p>
+            <p>Municipio de Tulum</p>
+        </div>
+    </div>
+</body>
+</html>

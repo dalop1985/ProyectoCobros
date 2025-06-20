@@ -1,0 +1,42 @@
+<!-- templates/emails/contrasena_cambiada.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Contraseña Actualizada</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px; }
+        .header { background-color: #1e2a3a; color: white; padding: 15px; text-align: center; border-radius: 5px 5px 0 0; }
+        .content { padding: 20px; }
+        .footer { text-align: center; margin-top: 20px; color: #777; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Sistema de Cobros Municipales</h1>
+        </div>
+
+        <div class="content">
+            <p>Hola <strong>{{ nombre_completo }}</strong>,</p>
+            <p>Le informamos que su contraseña ha sido actualizada exitosamente en el Sistema de Cobros Municipales.</p>
+
+            <p class="warning">⚠️ Importante:</p>
+            <ul>
+                <li>Si no realizó este cambio, por favor contacte al administrador inmediatamente</li>
+                <li>Nunca comparta sus credenciales con nadie</li>
+                <li>Usted es responsable del uso que se dé a su cuenta</li>
+            </ul>
+
+            <p>Puede acceder al sistema en: <a href="{{ login_url }}">{{ login_url }}</a></p>
+        </div>
+
+        <div class="footer">
+            <p>Atentamente,</p>
+            <p><strong>Administrador del Sistema</strong></p>
+            <p>Municipio de Tulum</p>
+        </div>
+    </div>
+</body>
+</html>

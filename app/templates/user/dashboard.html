@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<style>
+    /* Variables CSS con configuraciones */
+    :root {
+        --primary: {{ config.color_principal }};
+        --secondary: {{ config.color_secundario }};
+        --text-color: {{ config.color_texto }};
+        --main-font: '{{ config.fuente_principal }}', sans-serif;
+        --title-font: '{{ config.fuente_titulos }}', sans-serif;
+    }
+
+    /* Aplicar fuentes */
+    body {
+        font-family: var(--main-font);
+        color: var(--text-color);
+    }
+
+    h1, h2, h3, h4, h5, h6, .card-title {
+        font-family: var(--title-font);
+    }
+
+    /* Fondo con opacidad */
+    .background-layer {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        background-image: url("{{ url_for('static', filename='images/fondos/' + config.imagen_fondo) }}");
+        background-size: cover;
+        background-position: center;
+        opacity: {{ config.opacidad_fondo }};
+    }
+
+    /* Contenido sobre fondo */
+    .content-overlay {
+        background-color: rgba(255, 255, 255, 0.85);
+        border-radius: 10px;
+        padding: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block title %}Panel de Usuario - Cobros Municipales{% endblock %}
+
+{% block content %}
+<!-- Capa de fondo -->
+<div class="background-layer"></div>
+
+<div class="container mt-4">
+    <!-- Cabecera con logos y slogan -->
+    <div class="header-section rounded p-4 mb-4 text-center"
+         style="background: linear-gradient(135deg, var(--primary), var(--secondary));">
+        <div class="row align-items-center">
+            <div class="col-md-3">
+                <img src="{{ url_for('static', filename='images/logos/' + config.logo_municipio) }}"
+                     class="img-fluid" style="max-height: 100px; background: white; padding: 10px; border-radius: 5px;">
+            </div>
+            <div class="col-md-6">
+                <h2 style="color: white; text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">Sistema de Cobros Municipales</h2>
+                <p class="lead" style="color: white;">{{ config.slogan }}</p>
+            </div>
+            <div class="col-md-3">
+                <img src="{{ url_for('static', filename='images/logos/' + config.logo_admin) }}"
+                     class="img-fluid" style="max-height: 80px; background: white; padding: 5px; border-radius: 5px;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Información municipal -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5>Información Municipal</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <p><strong>Presidente Municipal:</strong><br>{{ config.presidente_municipal }}</p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Dirección:</strong><br>{{ config.direccion }}</p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Horario:</strong><br>{{ config.horario_atencion }}</p>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-6">
+                    <p><strong>Contacto:</strong><br>{{ config.email_contacto }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Emergencias:</strong><br>{{ config.telefono_emergencia }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Encabezado con información del usuario -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">Panel de Usuario</h4>
+                <span class="badge bg-light text-dark fs-6">ROL: {{ current_user.rol | upper }}</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <h5>Bienvenido, {{ current_user.usuario }}</h5>
+                    <p class="text-muted">Sistema de Cobros Municipales - Gestión de pagos</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <a href="{{ url_for('main.logout') }}" class="btn btn-danger btn-sm">
+                        <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de pagos y servicios -->
+    <div class="row">
+        <!-- Tarjeta de deudas pendientes -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0">Pagos Pendientes</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Tienes 2 pagos pendientes
+                    </div>
+
+                    <div class="list-group">
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <span>Impuesto Predial</span>
+                                <span class="fw-bold">Q 850.00</span>
+                            </div>
+                            <small class="text-muted">Vence el 15/08/2023</small>
+                        </div>
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <span>Limpieza Pública</span>
+                                <span class="fw-bold">Q 150.00</span>
+                            </div>
+                            <small class="text-muted">Vence el 20/08/2023</small>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 d-grid gap-2">
+                        <a href="#" class="btn btn-primary">
+                            <i class="bi bi-credit-card me-2"></i> Realizar Pago
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta de servicios municipales -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Servicios Municipales</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle me-2"></i>
+                        Servicios activos
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="#" class="btn btn-outline-success text-start">
+                            <i class="bi bi-trash me-2"></i> Recolección de Basura
+                        </a>
+                        <a href="#" class="btn btn-outline-success text-start">
+                            <i class="bi bi-droplet me-2"></i> Servicio de Agua
+                        </a>
+                        <a href="#" class="btn btn-outline-success text-start">
+                            <i class="bi bi-lightning me-2"></i> Alumbrado Público
+                        </a>
+                        <a href="#" class="btn btn-outline-success text-start">
+                            <i class="bi bi-tree me-2"></i> Parques y Jardines
+                        </a>
+                    </div>
+
+                    <div class="mt-3">
+                        <a href="#" class="btn btn-link text-decoration-none">
+                            <i class="bi bi-question-circle me-2"></i> Solicitar nuevo servicio
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historial de pagos -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Historial de Pagos Recientes</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Concepto</th>
+                            <th>Monto</th>
+                            <th>Referencia</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>10/07/2023</td>
+                            <td>Impuesto Predial</td>
+                            <td>Q 850.00</td>
+                            <td>REF-789456</td>
+                            <td><span class="badge bg-success">Completado</span></td>
+                        </tr>
+                        <tr>
+                            <td>05/06/2023</td>
+                            <td>Limpieza Pública</td>
+                            <td>Q 150.00</td>
+                            <td>REF-123456</td>
+                            <td><span class="badge bg-success">Completado</span></td>
+                        </tr>
+                        <tr>
+                            <td>12/05/2023</td>
+                            <td>Permiso Construcción</td>
+                            <td>Q 1,200.00</td>
+                            <td>REF-987654</td>
+                            <td><span class="badge bg-success">Completado</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="text-center mt-2">
+                <a href="#" class="btn btn-sm btn-outline-primary">
+                    Ver historial completo <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificaciones municipales -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Avisos y Notificaciones</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <h6><i class="bi bi-megaphone me-2"></i> Suspensión temporal de agua</h6>
+                <p class="mb-1">El próximo miércoles 16/08 de 9:00 am a 2:00 pm se realizarán trabajos de mantenimiento en la red de agua potable en su sector.</p>
+                <small class="text-muted">Publicado: 05/08/2023</small>
+            </div>
+
+            <div class="alert alert-info">
+                <h6><i class="bi bi-megaphone me-2"></i> Nuevo horario de recolección</h6>
+                <p class="mb-1">A partir del 1° de septiembre, el servicio de recolección de basura en su zona será los martes y viernes a las 8:00 am.</p>
+                <small class="text-muted">Publicado: 28/07/2023</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

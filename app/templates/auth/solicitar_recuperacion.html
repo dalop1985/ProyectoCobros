@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Recuperar Contraseña</h4>
+                </div>
+                <div class="card-body">
+                    <p>Ingrese su nombre de usuario o correo electrónico para recibir un código de verificación.</p>
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        <div class="mb-3">
+                            {{ form.usuario_o_email.label(class="form-label") }}
+                            {{ form.usuario_o_email(class="form-control") }}
+                        </div>
+                        
+                        {% if intentos > 2 %}
+                        <div class="mb-3">
+                            {{ form.captcha.label(class="form-label") }}
+                            {{ form.captcha(class="form-control") }}
+                            <small class="form-text text-muted">Complete el captcha para continuar</small>
+                        </div>
+                        {% endif %}
+                        
+                        <button type="submit" class="btn btn-primary">Enviar Código</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+/* Estilos personalizados para el dashboard */
+.sidebar-dark-primary {
+    background-color: #1e2a3a;
+}
+
+.brand-link {
+    border-bottom: 1px solid #2c3b4e;
+}
+
+.content-wrapper {
+    background-color: #f4f6f9;
+}
+
+.small-box {
+    border-radius: 0.25rem;
+    box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+    margin-bottom: 20px;
+}
+
+.small-box .icon>i {
+    font-size: 70px;
+    top: 15px;
+    transition: transform .3s linear;
+}
+
+.small-box:hover .icon>i {
+    transform: scale(1.1);
+}
+
+/* Colores para los badges */
+.badge-info {
+    background-color: #17a2b8;
+}
+
+.badge-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+/* Mejoras en las tarjetas */
+.card {
+    border: 0;
+    border-radius: 0.25rem;
+    box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid rgba(0,0,0,.125);
+}

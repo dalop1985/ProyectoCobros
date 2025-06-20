@@ -1,0 +1,43 @@
+<!-- templates/emails/codigo_recuperacion.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Código de Recuperación</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px; }
+        .header { background-color: #1e2a3a; color: white; padding: 15px; text-align: center; border-radius: 5px 5px 0 0; }
+        .content { padding: 20px; }
+        .codigo { font-size: 2em; letter-spacing: 5px; text-align: center; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 20px; color: #777; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Sistema de Cobros Municipales</h1>
+        </div>
+
+        <div class="content">
+            <p>Hola <strong>{{ nombre_completo }}</strong>,</p>
+            <p>Hemos recibido una solicitud para restablecer su contraseña. Utilice el siguiente código para continuar:</p>
+
+            <div class="codigo">{{ codigo }}</div>
+
+            <p class="warning">⚠️ Importante:</p>
+            <ul>
+                <li>Este código es válido por 10 minutos</li>
+                <li>Si no solicitó este cambio, ignore este mensaje</li>
+                <li>Nunca comparta sus códigos de verificación con nadie</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p>Atentamente,</p>
+            <p><strong>Administrador del Sistema</strong></p>
+            <p>Municipio de Tulum</p>
+        </div>
+    </div>
+</body>
+</html>

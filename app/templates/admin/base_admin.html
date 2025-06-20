@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin | {% block title %}{% endblock %}</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- AdminLTE CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+
+    <style>
+        :root {
+            --primary: #1e2a3a;
+            --secondary: #2c3b4e;
+        }
+        .sidebar-dark-primary {
+            background-color: var(--primary) !important;
+        }
+        .brand-link {
+            border-bottom: 1px solid var(--secondary) !important;
+        }
+    </style>
+
+    {% block css %}{% endblock %}
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+<div class="wrapper">
+    <!-- Navbar -->
+    {% include 'admin/includes/header.html' %}
+
+    <!-- Sidebar -->
+    {% include 'admin/includes/sidebar.html' %}
+
+    <!-- Contenido -->
+    <div class="content-wrapper">
+        <section class="content">
+            <div class="container-fluid py-3">
+                {% block content %}{% endblock %}
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    {% include 'admin/includes/footer.html' %}
+</div>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,158 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Gestión de Usuarios{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+   <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Gestión de Usuarios</h1>
+        <a href="{{ url_for('admin.crear_usuario') }}" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus"></i> Nuevo Usuario
+        </a>
+    </div>
+
+    <!-- Barra de búsqueda -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" action="{{ url_for('admin.gestion_usuarios') }}">
+                <div class="input-group">
+                    <input type="text" class="form-control" name="busqueda" 
+                           placeholder="Buscar usuarios..." value="{{ busqueda }}">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Lista de Usuarios</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Usuario</th>
+                            <th>Nombre Completo</th>
+                            <th>Email</th>
+                            <th>Rol</th>
+                            <th>Estado</th>
+                            <th>Nuevo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for usuario in usuarios.items %}
+                        <tr>
+                            <td>{{ usuario.id }}</td>
+                            <td>{{ usuario.usuario }}</td>
+                            <td>{{ usuario.nombre }} {{ usuario.apellido_paterno }} {{ usuario.apellido_materno or '' }}</td>
+                            <td>{{ usuario.email }}</td>
+                            <td>
+                                <span class="badge {% if usuario.rol == 'admin' %}bg-danger{% else %}bg-primary{% endif %}">
+                                    {{ usuario.rol | capitalize }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if usuario.activo %}
+                                    <span class="badge bg-success">Activo</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if usuario.nuevo_user %}
+                                    <span class="badge bg-warning">Sí</span>
+                                {% else %}
+                                    <span class="badge bg-info">No</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('admin.editar_usuario', id=usuario.id) }}"
+                                   class="btn btn-warning btn-sm" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+
+                                {% if usuario.id != current_user.id %}
+                                  {% if usuario.activo %}
+                                    <button onclick="cambiarEstado({{ usuario.id }}, false)"
+                                            class="btn btn-danger btn-sm"
+                                            title="Desactivar">
+                                      <i class="fas fa-ban"></i>
+                                    </button>
+                                  {% else %}
+                                    <button onclick="cambiarEstado({{ usuario.id }}, true)"
+                                            class="btn btn-success btn-sm"
+                                            title="Activar">
+                                      <i class="fas fa-check"></i>
+                                    </button>
+                                  {% endif %}
+                                {% endif %}
+                            </td>
+
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center">No se encontraron usuarios</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Paginación -->
+            <nav aria-label="Pagination">
+                <ul class="pagination justify-content-center">
+                    {% if usuarios.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.gestion_usuarios', page=usuarios.prev_num, busqueda=busqueda) }}">Anterior</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for page_num in usuarios.iter_pages() %}
+                    <li class="page-item {% if page_num == usuarios.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.gestion_usuarios', page=page_num, busqueda=busqueda) }}">{{ page_num }}</a>
+                    </li>
+                    {% endfor %}
+                    
+                    {% if usuarios.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.gestion_usuarios', page=usuarios.next_num, busqueda=busqueda) }}">Siguiente</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+<script>
+function cambiarEstado(userId, activar) {
+  const url = activar ? '/admin/usuarios/activar/' : '/admin/usuarios/desactivar/';
+
+  fetch(url + userId, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': '{{ csrf_token() }}'
+    },
+    credentials: 'include'
+  })
+  .then(response => response.json())
+  .then(data => {
+    if(data.success) {
+      location.reload(); // Recargar para ver cambios
+    } else {
+      alert(data.error || 'Error al cambiar estado');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Error al cambiar estado');
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Verificar Código</h4>
+                </div>
+                <div class="card-body">
+                    <p>Se ha enviado un código de 6 dígitos a su correo electrónico. Ingreselo a continuación.</p>
+                    <p class="text-muted small">El código expirará en 10 minutos.</p>
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        <div class="mb-3">
+                            {{ form.codigo.label(class="form-label") }}
+                            {{ form.codigo(class="form-control") }}
+                        </div>
+                        <button type="submit" class="btn btn-primary">Verificar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

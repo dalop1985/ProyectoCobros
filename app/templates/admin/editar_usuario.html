@@ -1,0 +1,198 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}{{ accion }} Usuario{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{{ accion }} Usuario</h1>
+        <a href="{{ url_for('admin.gestion_usuarios') }}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <!-- Mostrar mensajes de error aquí -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="POST">
+                {{ form.hidden_tag() }}
+
+                {% if accion == 'Editar' %}
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox"
+                                   id="generarNuevaContrasena" name="generar_nueva_contrasena" value="true">
+                            <label class="form-check-label" for="generarNuevaContrasena">
+                                Generar nueva contraseña temporal y enviar por correo
+                            </label>
+                            <small class="form-text text-muted d-block">
+                                Al marcar esta opción, se generará una nueva contraseña temporal
+                                y se enviará al correo del usuario.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        {{ form.usuario.label(class="form-label") }}
+                        {{ form.usuario(class="form-control") }}
+                        {% for error in form.usuario.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="col-md-6">
+                        {{ form.email.label(class="form-label") }}
+                        {{ form.email(class="form-control") }}
+                        {% for error in form.email.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        {{ form.nombre.label(class="form-label") }}
+                        {{ form.nombre(class="form-control") }}
+                        {% for error in form.nombre.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="col-md-4">
+                        {{ form.apellido_paterno.label(class="form-label") }}
+                        {{ form.apellido_paterno(class="form-control") }}
+                        {% for error in form.apellido_paterno.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="col-md-4">
+                        {{ form.apellido_materno.label(class="form-label") }}
+                        {{ form.apellido_materno(class="form-control") }}
+                        {% for error in form.apellido_materno.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        {{ form.rol.label(class="form-label") }}
+                        {{ form.rol(class="form-select") }}
+                    </div>
+
+                    <div class="col-md-4">
+                        {{ form.fecha_nacimiento.label(class="form-label") }}
+                        {{ form.fecha_nacimiento(class="form-control", type="date") }}
+                        {% for error in form.fecha_nacimiento.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="col-md-4">
+                        {{ form.activo.label(class="form-label d-block") }}
+                        <div class="form-check form-switch">
+                            {{ form.activo(class="form-check-input", role="switch") }}
+                        </div>
+                    </div>
+                    
+                     <!-- Campos de contraseña (solo para creación) -->
+                {% if accion == 'Crear' %}
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        {{ form.password.label(class="form-label") }}
+                        {{ form.password(class="form-control", placeholder="Dejar vacío para generar automática") }}
+                        {% for error in form.password.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.confirm_password.label(class="form-label") }}
+                        {{ form.confirm_password(class="form-control", placeholder="Confirmar contraseña") }}
+                    </div>
+
+                    <div class="col-12 mt-2">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i> La contraseña debe tener al menos 8 caracteres
+                        </small>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="d-flex justify-content-between">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {{ accion }} Usuario
+                    </button>
+
+                    {% if accion == 'Editar' and usuario.id != current_user.id %}
+                        {% if usuario.activo %}
+                          <button onclick="cambiarEstado({{ usuario.id }}, false)"
+                                  class="btn btn-danger"
+                                  data-confirm="¿Estás seguro de desactivar este usuario?">
+                            <i class="fas fa-ban"></i> Desactivar
+                          </button>
+                        {% else %}
+                          <button onclick="cambiarEstado({{ usuario.id }}, true)"
+                                  class="btn btn-success"
+                                  data-confirm="¿Estás seguro de activar este usuario?">
+                            <i class="fas fa-check"></i> Activar
+                          </button>
+                        {% endif %}
+                      {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% if form.errors %}
+<div class="alert alert-danger">
+    <strong>Errores en el formulario:</strong>
+    <ul>
+    {% for field, errors in form.errors.items() %}
+        {% for error in errors %}
+            <li>{{ form[field].label.text }}: {{ error }}</li>
+        {% endfor %}
+    {% endfor %}
+    </ul>
+</div>
+
+<script>
+// Agregar confirmación antes de cambiar estado
+document.querySelectorAll('[data-confirm]').forEach(button => {
+  button.addEventListener('click', function(e) {
+    if(!confirm(this.getAttribute('data-confirm'))) {
+      e.preventDefault();
+    }
+  });
+});
+
+// Mostrar alerta al marcar la opción de generar nueva contraseña
+document.getElementById('generarNuevaContrasena').addEventListener('change', function() {
+    if (this.checked) {
+        if (!confirm('¿Está seguro de generar una nueva contraseña temporal? Se enviará un correo al usuario con las nuevas credenciales.')) {
+            this.checked = false;
+        }
+    }
+});
+
+</script>
+{% endif %}

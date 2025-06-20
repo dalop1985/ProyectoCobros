@@ -1,0 +1,52 @@
+<!-- app/templates/emails/bienvenida.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Bienvenido al Sistema</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px; }
+        .header { background-color: #1e2a3a; color: white; padding: 15px; text-align: center; border-radius: 5px 5px 0 0; }
+        .content { padding: 20px; }
+        .credentials { background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 20px; color: #777; font-size: 0.9em; }
+        .warning { color: #d9534f; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Sistema de Cobros Municipales</h1>
+        </div>
+
+        <div class="content">
+            <p>Hola <strong>{{ nombre_completo }}</strong>,</p>
+            <p>Le damos la bienvenida al Sistema de Cobros Municipales.</p>
+
+            <div class="credentials">
+                <p>Sus credenciales de acceso son:</p>
+                <p><strong>Usuario:</strong> {{ usuario }}</p>
+                <p><strong>Contraseña temporal:</strong> {{ password }}</p>
+            </div>
+
+            <p>Puede acceder al sistema en:</p>
+            <p><a href="{{ login_url }}">{{ login_url }}</a></p>
+
+            <p class="warning">⚠️ Importante:</p>
+            <ul>
+                <li>Esta contraseña es temporal y debe cambiarla en su primer acceso</li>
+                <li>No comparta sus credenciales con nadie</li>
+                <li>Usted es responsable del uso que se dé a su cuenta</li>
+                <li>El acceso no autorizado está prohibido y será sancionado</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p>Atentamente,</p>
+            <p><strong>Administrador del Sistema</strong></p>
+            <p>Municipio de Tulum</p>
+        </div>
+    </div>
+</body>
+</html>

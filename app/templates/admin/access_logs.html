@@ -1,0 +1,172 @@
+<!-- access_logs.html -->
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Bitácora de Accesos{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Bitácora de Accesos</h1>
+    </div>
+
+    <!-- Barra de búsqueda -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" action="{{ url_for('admin.access_logs') }}">
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <label for="fecha_inicio">Fecha Inicio</label>
+                        <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio"
+                               value="{{ fecha_inicio or '' }}">
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label for="fecha_fin">Fecha Fin</label>
+                        <input type="date" class="form-control" id="fecha_fin" name="fecha_fin"
+                               value="{{ fecha_fin or '' }}">
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="busqueda">Buscar Usuario</label>
+                        <input type="text" class="form-control" id="busqueda" name="busqueda"
+                               placeholder="Buscar usuario..." value="{{ busqueda or '' }}">
+                    </div>
+                    <div class="form-group col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">Buscar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Mostrar criterios de búsqueda -->
+    {% if fecha_inicio or fecha_fin or busqueda %}
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white py-2">
+            <h6 class="m-0">Criterios de Búsqueda Aplicados</h6>
+        </div>
+        <div class="card-body p-3">
+            <div class="d-flex flex-wrap">
+                {% if fecha_inicio %}
+                <div class="mr-3 mb-1">
+                    <span class="font-weight-bold">Fecha Inicio:</span> {{ fecha_inicio }}
+                </div>
+                {% endif %}
+                {% if fecha_fin %}
+                <div class="mr-3 mb-1">
+                    <span class="font-weight-bold">Fecha Fin:</span> {{ fecha_fin }}
+                </div>
+                {% endif %}
+                {% if busqueda %}
+                <div class="mb-1">
+                    <span class="font-weight-bold">Usuario:</span> {{ busqueda }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    Registro de Actividades
+                    {% if fecha_inicio or fecha_fin or busqueda %}
+                    <small class="ml-2 text-muted">
+                        (Filtros:
+                        {% if fecha_inicio %}Desde: {{ fecha_inicio }}{% endif %}
+                        {% if fecha_fin %} - Hasta: {{ fecha_fin }}{% endif %}
+                        {% if busqueda %} - Usuario: {{ busqueda }}{% endif %})
+                    </small>
+                    {% endif %}
+                </h6>
+                <div>
+                    <span class="mr-3">Total: {{ logs.total }} registros</span>
+                    <a href="{{ url_for('admin.exportar_access_logs',
+                                       fecha_inicio=fecha_inicio,
+                                       fecha_fin=fecha_fin,
+                                       busqueda=busqueda) }}"
+                       class="btn btn-sm btn-success">
+                        <i class="fas fa-file-export"></i> Exportar CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Fecha/Hora</th>
+                            <th>Usuario</th>
+                            <th>Evento</th>
+                            <th>IP</th>
+                            <th>Ubicación</th>
+                            <th>Dispositivo</th>
+                            <th>Detalles</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs.items %}
+                        <tr>
+                            <td>{{ log.timestamp.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>{{ log.user.usuario if log.user else 'N/A' }}</td>
+                            <td>{{ log.event_type }}</td>
+                            <td>{{ log.ip_address }}</td>
+                            <td>{{ log.location or 'N/A' }}</td>
+                            <td>{{ log.device_info }}</td>
+                            <td>{{ log.details | default('N/A', true) | truncate(50) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center">No hay registros</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación con parámetros de búsqueda -->
+            <nav aria-label="Pagination">
+                <ul class="pagination">
+                    {% if logs.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="{{ url_for('admin.access_logs',
+                                           page=logs.prev_num,
+                                           fecha_inicio=fecha_inicio,
+                                           fecha_fin=fecha_fin,
+                                           busqueda=busqueda) }}">Anterior</a>
+                    </li>
+                    {% endif %}
+
+                    {% for page_num in logs.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if page_num %}
+                    <li class="page-item {% if page_num == logs.page %}active{% endif %}">
+                        <a class="page-link"
+                           href="{{ url_for('admin.access_logs',
+                                           page=page_num,
+                                           fecha_inicio=fecha_inicio,
+                                           fecha_fin=fecha_fin,
+                                           busqueda=busqueda) }}">{{ page_num }}</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if logs.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                           href="{{ url_for('admin.access_logs',
+                                           page=logs.next_num,
+                                           fecha_inicio=fecha_inicio,
+                                           fecha_fin=fecha_fin,
+                                           busqueda=busqueda) }}">Siguiente</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+{% endblock %}
