@@ -50,5 +50,12 @@ def create_app():
     app.config['UPLOAD_FOLDER_LOGOS'] = os.path.join(app.instance_path, 'static', 'images', 'logos')
     os.makedirs(app.config['UPLOAD_FOLDER_LOGOS'], exist_ok=True)
 
+    # DEBUG: Listar todas las rutas (temporal)
+    #with app.app_context():
+    #    print("\nRutas registradas:")
+    #    for rule in app.url_map.iter_rules():
+    #        print(f"{rule.endpoint}: {rule}")
+    #    print()
+
 
     return app

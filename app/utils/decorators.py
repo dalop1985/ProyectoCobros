@@ -5,19 +5,27 @@ from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
 from app.models import Usuario
 from app.utils.logger import log_event
 
+
 def role_required(roles):
     def decorator(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):
-            verify_jwt_in_request()
-            user_id = get_jwt_identity()
-            current_user = Usuario.query.get(user_id)
+            try:
+                verify_jwt_in_request()
+                user_id = get_jwt_identity()
+                current_user = Usuario.query.get(user_id)
 
-            if not current_user or current_user.rol not in roles:
-                flash('Acceso no autorizado', 'danger')
+                if not current_user or current_user.rol not in roles:
+                    flash('Acceso no autorizado', 'danger')
+                    current_app.logger.warning(
+                        f"Intento de acceso no autorizado a {request.path} por {current_user.usuario if current_user else 'anonimo'}")
+                    return redirect(url_for('admin.admin_dashboard'))
+
+                return fn(*args, **kwargs)
+            except Exception as e:
+                current_app.logger.error(f"Error en role_required: {str(e)}")
+                flash('Error de autenticación', 'danger')
                 return redirect(url_for('main.login'))
-
-            return fn(*args, **kwargs)
 
         return wrapper
 

@@ -1,0 +1,77 @@
+{% extends "admin/base_admin.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4>Solicitudes de Baja</h4>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Fecha</th>
+                        <th>Motivo</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for solicitud in solicitudes %}
+                    <tr>
+                        <td>{{ solicitud.usuario.usuario }}</td>
+                        <td>{{ solicitud.fecha_solicitud.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ solicitud.motivo[:50] }}...</td>
+                        <td>
+                            <button class="btn btn-success btn-sm" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#modalResolver{{ solicitud.id }}"
+                                    data-accion="aprobar">
+                                Aprobar
+                            </button>
+                            <button class="btn btn-danger btn-sm"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalResolver{{ solicitud.id }}"
+                                    data-accion="rechazar">
+                                Rechazar
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% for solicitud in solicitudes %}
+<!-- Modal Resolver -->
+<div class="modal fade" id="modalResolver{{ solicitud.id }}">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('admin.procesar_solicitud', id=solicitud.id) }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Resolver Solicitud</h5>
+                </div>
+                <div class="modal-body">
+                    <textarea name="observaciones" class="form-control" placeholder="Observaciones" required></textarea>
+                    <input type="hidden" name="accion" id="accion{{ solicitud.id }}">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Confirmar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll('[data-bs-target="#modalResolver{{ solicitud.id }}"]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('accion{{ solicitud.id }}').value = btn.getAttribute('data-accion');
+        });
+    });
+</script>
+{% endfor %}
+{% endblock %}

@@ -2,6 +2,7 @@
 from flask_mail import Message
 from flask import current_app, render_template
 from app import mail
+from datetime import datetime
 
 
 def enviar_correo_bienvenida(usuario, contrasena_temporal, es_actualizacion=False):
@@ -86,4 +87,31 @@ def enviar_correo_codigo_recuperacion(usuario, codigo):
         return True
     except Exception as e:
         current_app.logger.error(f"Error enviando correo de recuperación: {str(e)}")
+        return False
+
+
+def enviar_notificacion_baja(usuario, accion, observaciones):
+    try:
+        subject = "Solicitud de baja " + ("aprobada" if accion == "aprobar" else "rechazada")
+        template = f'emails/baja_{accion}.html'
+
+
+        html = render_template(
+            template,
+            usuario=usuario,
+            observaciones=observaciones,
+            fecha=datetime.now().strftime('%d/%m/%Y')
+        )
+
+        msg = Message(
+            subject=subject,
+            recipients=[usuario.email],
+            html=html,
+            sender=current_app.config['MAIL_DEFAULT_SENDER']
+        )
+        mail.send(msg)
+        #log_event(None, 'email_sent', 'enviar_notificacion_baja', f"Notificación {accion} enviada a {usuario.email}")
+        return True
+    except Exception as e:
+        #log_event(None, 'email_error', 'enviar_notificacion_baja', str(e))
         return False

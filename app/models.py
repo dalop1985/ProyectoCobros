@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import secrets
 from app import db
 
+
 class Usuario(db.Model):
     __tablename__ = 'usuarios'
 
@@ -21,9 +22,28 @@ class Usuario(db.Model):
     actualizado_en = db.Column(db.DateTime, default=db.func.current_timestamp(),
                                onupdate=db.func.current_timestamp())
 
-    # Relación con los registros de acceso
-    #access_logs = db.relationship('AccessLog', backref='user', lazy=True)
+    # CORRECCIÓN: Eliminar la redefinición de estas columnas
+    creado_por_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'))
+    actualizado_por_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'))
+
+    # Relación con registros de acceso
     access_logs = db.relationship('AccessLog', backref='user', lazy='dynamic')
+
+    # CORRECCIÓN: Relaciones recursivas correctamente definidas
+    creado_por = db.relationship(
+        'Usuario',
+        remote_side=[id],
+        foreign_keys=[creado_por_id],
+        backref=db.backref('usuarios_creados', lazy='dynamic')
+    )
+
+    actualizado_por = db.relationship(
+        'Usuario',
+        remote_side=[id],
+        foreign_keys=[actualizado_por_id],
+        backref=db.backref('usuarios_actualizados', lazy='dynamic')
+    )
+
 
     def check_password(self, password):
         """Verifica si la contraseña coincide con el hash almacenado"""
@@ -144,3 +164,30 @@ class PasswordResetToken(db.Model):
             token=token,
             expires_at=expires_at
         )
+
+
+class SolicitudBaja(db.Model):
+    __tablename__ = 'solicitudes_baja'
+    id = db.Column(db.Integer, primary_key=True)
+
+    # CORRECCIÓN: Definir columnas solo una vez
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
+    fecha_solicitud = db.Column(db.DateTime, default=db.func.current_timestamp())
+    motivo = db.Column(db.Text, nullable=False)
+    estado = db.Column(db.String(20), default='pendiente')
+    admin_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'))
+    observaciones = db.Column(db.Text)
+    fecha_resolucion = db.Column(db.DateTime)
+
+    # CORRECCIÓN: Relaciones bien definidas
+    usuario = db.relationship(
+        'Usuario',
+        foreign_keys=[usuario_id],
+        backref=db.backref('solicitudes_baja', lazy='dynamic')
+    )
+
+    admin = db.relationship(
+        'Usuario',
+        foreign_keys=[admin_id],
+        backref=db.backref('solicitudes_resueltas', lazy='dynamic')
+    )

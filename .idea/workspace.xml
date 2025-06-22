@@ -5,51 +5,24 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="770f954e-e4e0-4e1c-a63a-21fbce0e9adf" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.env" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/pythonProject.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/config.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/forms.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/middleware.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/models.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/routes.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/static/css/styles.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/static/images/fondos/FondoTlaniaPrincipal.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/static/images/logos/LOGOTULUM.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/static/images/logos/LogoAdmin.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/static/images/logos/LogoPrincipal2.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/admin/access_logs.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/admin/base_admin.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/admin/configuracion.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/admin/dashboard.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/admin/editar_usuario.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/admin/gestion_usuarios.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/admin/includes/footer.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/admin/includes/header.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/admin/includes/sidebar.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/auth/establecer_nueva_contrasena.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/auth/login.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/auth/solicitar_recuperacion.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/auth/verificar_codigo.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/base.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/cambiar_contrasena_primera_vez.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/emails/actualizacion.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/emails/bienvenida.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/emails/codigo_recuperacion.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/emails/contrasena_cambiada.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/user/dashboard.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/utils/decorators.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/utils/email.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/utils/logger.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/utils/security.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/run.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/templates/admin/solicitudes_baja.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/templates/user/perfil.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/migrations/README" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/migrations/alembic.ini" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/migrations/env.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/migrations/script.py.mako" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/migrations/versions/5a73fa99cb58_fix_ambiguous_foreign_keys.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routes.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/templates/admin/dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/admin/dashboard.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/templates/admin/includes/header.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/admin/includes/header.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/templates/admin/includes/sidebar.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/admin/includes/sidebar.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/templates/user/dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/user/dashboard.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/utils/decorators.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/utils/decorators.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/utils/email.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/utils/email.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run.py" beforeDir="false" afterPath="$PROJECT_DIR$/run.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -67,6 +40,18 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;dalop1985&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/dalop1985/ProyectoCobros.git&quot;,
+    &quot;accountId&quot;: &quot;ba091f0d-11be-4cad-a790-f6bff3399d10&quot;
+  }
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 7
 }</component>
@@ -86,7 +71,7 @@
     &quot;Python.run.executor&quot;: &quot;Run&quot;,
     &quot;Python.test.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Produiccion/ProyectoX/pythonProject&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;org.jetbrains.plugins.github.ui.GithubSettingsConfigurable&quot;
   }
@@ -213,5 +198,16 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/app/utils/email.py</url>
+          <line>105</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

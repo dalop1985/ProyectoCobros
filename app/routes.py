@@ -13,10 +13,9 @@ from wtforms.validators import DataRequired
 
 import app
 from app import jwt, db, bcrypt
-from app.models import Usuario, AccessLog, Configuracion, PasswordResetToken
+from app.models import Usuario, AccessLog, Configuracion, PasswordResetToken, SolicitudBaja
 
-from app.forms import ConfiguracionForm, UsuarioForm, SolicitudRecuperacionForm, VerificarCodigoForm, \
-    NuevaContrasenaForm
+from app.forms import ConfiguracionForm, UsuarioForm, SolicitudRecuperacionForm, VerificarCodigoForm, NuevaContrasenaForm
 from .utils.decorators import role_required
 from .utils.logger import log_event
 from datetime import datetime, timedelta
@@ -26,11 +25,14 @@ from sqlalchemy.exc import IntegrityError
 
 #para el EMAIL Y PASS DE USER
 from app.utils.security import generar_contrasena_temporal
-from app.utils.email import enviar_correo_bienvenida, enviar_correo_codigo_recuperacion
+from app.utils.email import enviar_correo_bienvenida, enviar_correo_codigo_recuperacion, enviar_notificacion_baja
 
 #CAMBIO DE CONTRASEÑAS
 from app.forms import CambioContrasenaForm
 from app.utils.email import enviar_correo_contrasena_cambiada
+
+from sqlalchemy import text
+from sqlalchemy.orm import joinedload
 
 # Blueprints
 routes_bp = Blueprint('main', __name__)
@@ -851,6 +853,121 @@ def configuracion():
                            config=config,
                            current_user=current_user)
 
+
+# Perfil de usuario
+@routes_bp.route('/perfil')
+@jwt_required()
+def perfil_usuario():
+    try:
+        user_id = get_jwt_identity()
+        usuario = Usuario.query.get(user_id)
+
+        # Verificar si tiene solicitud pendiente
+        tiene_solicitud_pendiente = SolicitudBaja.query.filter_by(
+            usuario_id=user_id,
+            estado='pendiente'
+        ).first() is not None
+
+        log_event(current_user, 'profile_view', request.endpoint, f"Vista perfil usuario {user_id}")
+        return render_template('user/perfil.html',
+                               current_user=usuario,
+                               tiene_solicitud_pendiente=tiene_solicitud_pendiente)
+    except Exception as e:
+        log_event(current_user, 'error', request.endpoint, str(e))
+        flash('Error al cargar perfil', 'danger')
+        return redirect(url_for('main.user_dashboard'))
+
+
+# Solicitud de baja
+@routes_bp.route('/solicitar_baja', methods=['POST'])
+@jwt_required()
+def solicitar_baja():
+    try:
+        user_id = get_jwt_identity()
+        motivo = request.form.get('motivo')
+
+        solicitud = SolicitudBaja(
+            usuario_id=user_id,
+            motivo=motivo
+        )
+        db.session.add(solicitud)
+        db.session.commit()
+
+        log_event(current_user, 'deactivation_request', request.endpoint,
+                  f"Solicitud baja usuario {user_id}")
+        flash('Solicitud enviada correctamente', 'success')
+    except Exception as e:
+        log_event(current_user, 'error', request.endpoint, str(e))
+        flash('Error al enviar solicitud', 'danger')
+
+    return redirect(url_for('main.perfil_usuario'))
+
+
+# Panel de solicitudes (Admin)
+@admin_bp.route('/solicitudes_de_baja')
+@jwt_required()
+@role_required(['admin'])
+def solicitudes_de_baja():
+    # CORRECCIÓN: Cargar relaciones usando joinedload
+    solicitudes = SolicitudBaja.query.options(
+        joinedload(SolicitudBaja.usuario),
+        joinedload(SolicitudBaja.admin)
+    ).filter_by(estado='pendiente').all()
+
+    return render_template('admin/solicitudes_baja.html',
+                           solicitudes=solicitudes,
+                           current_user=current_user)
+
+
+# Procesar solicitud (Admin)
+@admin_bp.route('/procesar_solicitud/<int:id>', methods=['POST'])
+@jwt_required()
+@role_required(['admin'])
+def procesar_solicitud(id):
+    try:
+        admin_id = get_jwt_identity()
+        accion = request.form.get('accion')
+        observaciones = request.form.get('observaciones', '')
+
+        # Usar stored procedure
+        db.engine.execute(
+            "EXEC sp_gestion_baja_usuario ?, ?, ?, ?",
+            (id, admin_id, accion, observaciones)
+        )
+
+        # Enviar email
+        usuario = Usuario.query.get(id)
+        enviar_notificacion_baja(usuario, accion, observaciones)
+
+        log_event(current_user, f'request_{accion}', request.endpoint,
+                  f"Solicitud {id} {accion} por admin {admin_id}")
+        flash(f'Solicitud {accion} correctamente', 'success')
+    except Exception as e:
+        log_event(current_user, 'error', request.endpoint, str(e))
+        flash('Error al procesar solicitud', 'danger')
+
+    return redirect(url_for('admin.solicitudes_baja'))
+
+
+@admin_bp.route('/debug_db')
+def debug_db():
+    try:
+        # 1. Probando conexión básica
+        result = db.session.execute(text("SELECT 1 AS test")).scalar()
+
+        # 2. Probando lectura de usuarios
+        users = db.session.execute(text("SELECT TOP 1 * FROM usuarios")).fetchall()
+
+        # 3. Probando lectura de solicitudes
+        solicitudes = db.session.execute(text("SELECT TOP 1 * FROM solicitudes_baja")).fetchall()
+
+        return jsonify({
+            "db_test": result,
+            "users_count": len(users),
+            "solicitudes_count": len(solicitudes)
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @routes_bp.route('/')
 def home():
