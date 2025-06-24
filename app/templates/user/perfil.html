@@ -4,45 +4,29 @@
 <div class="container">
     <div class="card shadow">
         <div class="card-header bg-primary text-white">
-            <h4>Mi Perfil</h4>
+            <div class="d-flex justify-content-between align-items-center">
+                <h4>Mi Perfil</h4>
+                <a href="{{ url_for('main.user_dashboard') }}" class="btn btn-sm btn-light">
+                    <i class="fas fa-arrow-left"></i> Regresar
+                </a>
+            </div>
         </div>
         <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <p><strong>Usuario:</strong> {{ current_user.usuario }}</p>
-                    <p><strong>Nombre:</strong> {{ current_user.nombre }} {{ current_user.apellido_paterno }} {{ current_user.apellido_materno or '' }}</p>
-                    <p><strong>Email:</strong> {{ current_user.email }}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong>Rol:</strong> {{ current_user.rol | capitalize }}</p>
-                    <p><strong>Estado:</strong> {{ 'Activo' if current_user.activo else 'Inactivo' }}</p>
-                    <p><strong>Fecha registro:</strong> {{ current_user.creado_en.strftime('%d/%m/%Y') }}</p>
-                </div>
-            </div>
+            {% include 'partials/perfil_content.html' %}
 
-            <hr>
-
-            <div class="row mt-3">
-                <div class="col-md-6">
-                    <p><strong>Fecha de nacimiento:</strong> {{ current_user.fecha_nacimiento.strftime('%d/%m/%Y') }}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong>Última actualización:</strong> {{ current_user.actualizado_en.strftime('%d/%m/%Y %H:%M') }}</p>
-                </div>
-            </div>
-
-            {% if current_user.rol == 'user' %}
+            <!-- Sección específica para usuarios normales -->
+            {% if usuario.rol == 'user' %}
             <div class="mt-4">
                 {% if not tiene_solicitud_pendiente %}
                 <button class="btn btn-danger mt-3" data-bs-toggle="modal" data-bs-target="#modalBaja">
-                    <i class="bi bi-person-x"></i> Solicitar Baja del Sistema
+                    <i class="fas fa-user-times"></i> Solicitar Baja
                 </button>
                 {% else %}
                 <div class="alert alert-warning mt-3">
-                    <i class="bi bi-exclamation-triangle"></i> Tiene una solicitud de baja pendiente
+                    <i class="fas fa-exclamation-triangle"></i> Tiene una solicitud de baja pendiente
                     <form method="POST" action="{{ url_for('main.cancelar_solicitud') }}" class="mt-2">
                         <button type="submit" class="btn btn-sm btn-secondary">
-                            <i class="bi bi-x-circle"></i> Cancelar Solicitud
+                            <i class="fas fa-times-circle"></i> Cancelar Solicitud
                         </button>
                     </form>
                 </div>

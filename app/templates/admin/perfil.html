@@ -1,0 +1,28 @@
+{% extends "admin/base_admin.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4>Perfil del Administrador</h4>
+                <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-sm btn-light">
+                    <i class="fas fa-times"></i> Cerrar
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Incluimos el contenido común del perfil -->
+            {% include 'partials/perfil_content.html' %}
+            
+            {% if es_admin %}
+            <div class="mt-4">
+                <a href="{{ url_for('admin.editar_usuario', id=usuario.id) }}" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> Editar Perfil
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

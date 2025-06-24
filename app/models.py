@@ -119,6 +119,7 @@ class Configuracion(db.Model):
     imagen_fondo = db.Column(db.String(255), default='fondo_default.jpg')
     opacidad_fondo = db.Column(db.Float, default=0.15)  # Valor entre 0 y 1
     color_texto = db.Column(db.String(7), default='#333333')
+    tiempo_inactividad = db.Column(db.Integer, default=20)
 
     @classmethod
     def obtener_fuentes_disponibles(cls):

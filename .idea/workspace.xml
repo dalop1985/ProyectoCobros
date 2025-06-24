@@ -5,24 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="770f954e-e4e0-4e1c-a63a-21fbce0e9adf" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/app/templates/admin/solicitudes_baja.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/user/perfil.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/migrations/README" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/migrations/alembic.ini" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/migrations/env.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/migrations/script.py.mako" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/migrations/versions/5a73fa99cb58_fix_ambiguous_foreign_keys.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/templates/admin/perfil.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/templates/partials/perfil_content.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/config.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/routes.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routes.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/templates/admin/dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/admin/dashboard.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/templates/admin/includes/header.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/admin/includes/header.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/templates/admin/includes/sidebar.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/admin/includes/sidebar.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/templates/user/dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/user/dashboard.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/utils/decorators.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/utils/decorators.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/utils/email.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/utils/email.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run.py" beforeDir="false" afterPath="$PROJECT_DIR$/run.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/templates/user/perfil.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/user/perfil.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -71,7 +62,7 @@
     &quot;Python.run.executor&quot;: &quot;Run&quot;,
     &quot;Python.test.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;SolBajasVistas220625&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Produiccion/ProyectoX/pythonProject&quot;,
     &quot;settings.editor.selected.configurable&quot;: &quot;org.jetbrains.plugins.github.ui.GithubSettingsConfigurable&quot;
   }

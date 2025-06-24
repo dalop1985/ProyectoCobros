@@ -1,0 +1,13 @@
+<div class="row">
+    <div class="col-md-6">
+        <p><strong>Usuario:</strong> {{ usuario.usuario }}</p>
+        <p><strong>Nombre:</strong> {{ usuario.nombre }} {{ usuario.apellido_paterno }} {{ usuario.apellido_materno or '' }}</p>
+        <p><strong>Email:</strong> {{ usuario.email }}</p>
+        <p><strong>Rol:</strong> {{ usuario.rol | capitalize }}</p>
+    </div>
+    <div class="col-md-6">
+        <p><strong>Estado:</strong> {{ 'Activo' if usuario.activo else 'Inactivo' }}</p>
+        <p><strong>Fecha registro:</strong> {{ usuario.creado_en.strftime('%d/%m/%Y') }}</p>
+        <p><strong>Registrado por:</strong> {{ usuario.creado_por.usuario if usuario.creado_por else 'Sistema' }}</p>
+    </div>
+</div>

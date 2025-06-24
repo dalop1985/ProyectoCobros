@@ -31,7 +31,7 @@ from app.utils.email import enviar_correo_bienvenida, enviar_correo_codigo_recup
 from app.forms import CambioContrasenaForm
 from app.utils.email import enviar_correo_contrasena_cambiada
 
-from sqlalchemy import text
+from sqlalchemy import text, or_, exists
 from sqlalchemy.orm import joinedload
 
 # Blueprints
@@ -113,6 +113,13 @@ def login():
 @routes_bp.route('/cambiar-contrasena', methods=['GET', 'POST'])
 @jwt_required()
 def cambiar_contrasena_primera_vez():
+    log_event(
+        user=current_user,
+        event_type='page_access',
+        endpoint='main.cambiar_contrasena_primera_vez',
+        details='Acceso a cambio de contraseña primera vez'
+    )
+
     user_id = get_jwt_identity()
     user = Usuario.query.get(user_id)
 
@@ -139,6 +146,12 @@ def cambiar_contrasena_primera_vez():
 #RECUPERAR CONTRASEÑA
 @routes_bp.route('/recuperar-contrasena', methods=['GET', 'POST'])
 def solicitar_recuperacion_contrasena():
+    log_event(
+        user=None,
+        event_type='page_access',
+        endpoint='main.solicitar_recuperacion_contrasena',
+        details='Acceso a recuperación de contraseña'
+    )
     form = SolicitudRecuperacionForm()
     intentos = session.get('recovery_attempts', 0)
 
@@ -171,6 +184,13 @@ def solicitar_recuperacion_contrasena():
 
 @routes_bp.route('/verificar-codigo/<int:token_id>', methods=['GET', 'POST'])
 def verificar_codigo_recuperacion(token_id):
+    log_event(
+        user=None,
+        event_type='page_access',
+        endpoint='main.verificar_codigo_recuperacion',
+        details=f'Acceso a verificación de código de recuperación (token_id: {token_id})'
+    )
+
     token = PasswordResetToken.query.get(token_id)
 
     if not token or not token.is_valid():
@@ -196,6 +216,13 @@ def verificar_codigo_recuperacion(token_id):
 @routes_bp.route('/establecer-nueva-contrasena', methods=['GET', 'POST'])
 @jwt_required()
 def establecer_nueva_contrasena():
+    log_event(
+        user=current_user,
+        event_type='page_access',
+        endpoint='main.establecer_nueva_contrasena',
+        details='Acceso a establecimiento de nueva contraseña'
+    )
+
     user_id = get_jwt_identity()
     user = Usuario.query.get(user_id)
     form = NuevaContrasenaForm()
@@ -262,9 +289,6 @@ def access_logs():
 
     # Construir consulta base
     query = AccessLog.query.join(Usuario).order_by(AccessLog.timestamp.desc())
-    #query = AccessLog.query.options(db.joinedload(AccessLog.user))
-    #query = AccessLog.query.join(Usuario).order_by(AccessLog.timestamp.desc())
-    #query = AccessLog.query.options(db.joinedload(AccessLog.user)).order_by(AccessLog.timestamp.desc())
 
     # Aplicar filtro de fechas
     if fecha_inicio:
@@ -308,9 +332,6 @@ def exportar_access_logs():
     busqueda = request.args.get('busqueda', '', type=str)
 
     # Construir consulta base
-    #query = AccessLog.query.options(db.joinedload(AccessLog.user))
-    #query = AccessLog.query.options(db.joinedload(AccessLog.user)).order_by(AccessLog.timestamp.desc())
-    #query = AccessLog.query.join(Usuario).order_by(AccessLog.timestamp.desc())
     query = AccessLog.query.join(Usuario).order_by(AccessLog.timestamp.desc())
 
     # Aplicar filtro de fechas
@@ -403,7 +424,7 @@ def logout():
                 endpoint='main.logout',
                 details='Cierre de sesión exitoso'
             )
-    except Exception:
+    except Exception as e:
         log_event(
             user=None,
             event_type='logout_error',
@@ -858,24 +879,39 @@ def configuracion():
 @routes_bp.route('/perfil')
 @jwt_required()
 def perfil_usuario():
+    log_event(
+        user=current_user,
+        event_type='profile_access',
+        endpoint='main.perfil_usuario',
+        details='Acceso a perfil de usuario'
+    )
     try:
         user_id = get_jwt_identity()
-        usuario = Usuario.query.get(user_id)
+        usuario = Usuario.query.options(
+            db.joinedload(Usuario.creado_por)
+        ).get(user_id)
 
-        # Verificar si tiene solicitud pendiente
-        tiene_solicitud_pendiente = SolicitudBaja.query.filter_by(
-            usuario_id=user_id,
-            estado='pendiente'
-        ).first() is not None
+        if not usuario:
+            flash('Usuario no encontrado', 'danger')
+            return redirect(url_for('main.user_dashboard' if usuario.rol == 'user' else 'admin.admin_dashboard'))
 
-        log_event(current_user, 'profile_view', request.endpoint, f"Vista perfil usuario {user_id}")
-        return render_template('user/perfil.html',
-                               current_user=usuario,
-                               tiene_solicitud_pendiente=tiene_solicitud_pendiente)
+        tiene_solicitud = db.session.query(SolicitudBaja).filter(SolicitudBaja.usuario_id == user_id, SolicitudBaja.estado == 'pendiente').first() is not None
+
+        # Determinar template según rol
+        template = 'admin/perfil.html' if usuario.rol == 'admin' else 'user/perfil.html'
+
+        return render_template(
+            template,
+            usuario=usuario,
+            tiene_solicitud_pendiente=tiene_solicitud,
+            es_admin=usuario.rol == 'admin',
+            current_user=current_user
+        )
+
     except Exception as e:
-        log_event(current_user, 'error', request.endpoint, str(e))
-        flash('Error al cargar perfil', 'danger')
-        return redirect(url_for('main.user_dashboard'))
+        print(f"ERROR en perfil_usuario: {str(e)}")
+        flash('Error al cargar el perfil', 'danger')
+        return redirect(url_for('main.user_dashboard' if current_user.rol == 'user' else 'admin.admin_dashboard'))
 
 
 # Solicitud de baja
@@ -908,6 +944,12 @@ def solicitar_baja():
 @jwt_required()
 @role_required(['admin'])
 def solicitudes_de_baja():
+    log_event(
+        user=current_user,
+        event_type='admin_access',
+        endpoint='admin.solicitudes_de_baja',
+        details='Acceso a panel de solicitudes de baja'
+    )
     # CORRECCIÓN: Cargar relaciones usando joinedload
     solicitudes = SolicitudBaja.query.options(
         joinedload(SolicitudBaja.usuario),
@@ -924,6 +966,12 @@ def solicitudes_de_baja():
 @jwt_required()
 @role_required(['admin'])
 def procesar_solicitud(id):
+    log_event(
+        user=current_user,
+        event_type='admin_action',
+        endpoint='admin.procesar_solicitud',
+        details=f'Inicio de procesamiento de solicitud ID: {id}'
+    )
     try:
         admin_id = get_jwt_identity()
         accion = request.form.get('accion')
@@ -949,26 +997,58 @@ def procesar_solicitud(id):
     return redirect(url_for('admin.solicitudes_baja'))
 
 
-@admin_bp.route('/debug_db')
-def debug_db():
+@routes_bp.route('/cancelar_solicitud', methods=['POST'])
+@role_required(['user'])
+def cancelar_solicitud():
+    log_event(
+        user=current_user,
+        event_type='user_action',
+        endpoint='main.cancelar_solicitud',
+        details='Intento de cancelación de solicitud de baja'
+    )
     try:
-        # 1. Probando conexión básica
-        result = db.session.execute(text("SELECT 1 AS test")).scalar()
+        user_id = get_jwt_identity()
 
-        # 2. Probando lectura de usuarios
-        users = db.session.execute(text("SELECT TOP 1 * FROM usuarios")).fetchall()
+        # Buscar y eliminar la solicitud pendiente
+        solicitud = SolicitudBaja.query.filter_by(
+            usuario_id=user_id,
+            estado='pendiente'
+        ).first()
 
-        # 3. Probando lectura de solicitudes
-        solicitudes = db.session.execute(text("SELECT TOP 1 * FROM solicitudes_baja")).fetchall()
 
-        return jsonify({
-            "db_test": result,
-            "users_count": len(users),
-            "solicitudes_count": len(solicitudes)
-        })
+
+        if solicitud:
+            db.session.delete(solicitud)
+            db.session.commit()
+            log_event(
+                current_user,
+                'solicitud_cancelada',
+                request.endpoint,
+                f"Solicitud cancelada por usuario {user_id}"
+            )
+            flash('Solicitud de baja cancelada correctamente', 'success')
+        else:
+            log_event(
+                current_user,
+                'solicitud_cancelada_erronea',
+                request.endpoint,
+                f"No se pudo realizar la acción de cancelación por usuario {user_id}"
+            )
+            flash('No se encontró solicitud pendiente para cancelar', 'warning')
+
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        db.session.rollback()
+        print(f"Error al cancelar solicitud: {str(e)}")
+        flash('Error al cancelar la solicitud', 'danger')
+
+    return redirect(url_for('main.perfil_usuario'))
 
 @routes_bp.route('/')
 def home():
+    log_event(
+        user=None,
+        event_type='page_access',
+        endpoint='main.home',
+        details='Acceso a página principal'
+    )
     return redirect(url_for('main.login'))
