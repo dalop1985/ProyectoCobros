@@ -118,7 +118,7 @@
                 <div class="row mb-4">
                     <div class="col-md-6">
                         {{ form.password.label(class="form-label") }}
-                        {{ form.password(class="form-control", placeholder="Dejar vacío para generar automática") }}
+                        {{ form.password(class="form-control", placeholder="Escriba una contraseña o deje vacío para generar automática") }}
                         {% for error in form.password.errors %}
                             <div class="text-danger">{{ error }}</div>
                         {% endfor %}
@@ -131,7 +131,9 @@
 
                     <div class="col-12 mt-2">
                         <small class="text-muted">
-                            <i class="fas fa-info-circle"></i> La contraseña debe tener al menos 8 caracteres
+                            <i class="fas fa-info-circle"></i>
+                            Escriba una contraseña o déjela vacía para generar una automática.
+                            En ambos casos se enviará por correo.
                         </small>
                     </div>
                 </div>

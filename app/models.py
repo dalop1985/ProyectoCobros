@@ -50,7 +50,7 @@ class Usuario(db.Model):
         from app import bcrypt
         pepper = "TulumxEver"
         password_pepper = (password + pepper)[:72]
-        self.password_hash = bcrypt.generate_password_hash(password_pepper).decode('utf-8')
+        #self.password_hash = bcrypt.generate_password_hash(password_pepper).decode('utf-8')
         return bcrypt.check_password_hash(self.password_hash, password_pepper)
 
     def nombre_completo(self):
@@ -192,3 +192,18 @@ class SolicitudBaja(db.Model):
         foreign_keys=[admin_id],
         backref=db.backref('solicitudes_resueltas', lazy='dynamic')
     )
+
+
+class HistoricoBajas(db.Model):
+    __tablename__ = 'historico_bajas'
+
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
+    fecha_baja = db.Column(db.DateTime, default=db.func.current_timestamp())
+    motivo_baja = db.Column(db.Text)
+    admin_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'))
+    acciones = db.Column(db.String(20), default='pendiente')
+
+    # Relaciones
+    usuario = db.relationship('Usuario', foreign_keys=[usuario_id])
+    administrador = db.relationship('Usuario', foreign_keys=[admin_id])

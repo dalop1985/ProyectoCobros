@@ -5,15 +5,24 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="770f954e-e4e0-4e1c-a63a-21fbce0e9adf" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/app/templates/admin/perfil.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/partials/perfil_content.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/static/images/logos/LogoAdmin_-_Copy.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/static/images/logos/LogoPrincipal2_-_Copy.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/templates/session_expired.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/middleware.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/middleware.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/routes.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routes.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/templates/admin/dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/admin/dashboard.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/templates/admin/editar_usuario.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/admin/editar_usuario.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/templates/admin/gestion_usuarios.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/admin/gestion_usuarios.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/templates/admin/solicitudes_baja.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/admin/solicitudes_baja.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/templates/auth/establecer_nueva_contrasena.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/auth/establecer_nueva_contrasena.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/templates/auth/solicitar_recuperacion.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/auth/solicitar_recuperacion.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/templates/auth/verificar_codigo.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/auth/verificar_codigo.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/base.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/templates/user/perfil.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/user/perfil.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/utils/decorators.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/utils/decorators.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

@@ -11,3 +11,16 @@
     {% endblock %}
 </div>
 {% endblock %}
+
+<script>
+    // Actualizar actividad al cargar el dashboard
+    document.addEventListener('DOMContentLoaded', () => {
+        fetch('/update-activity', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            }
+        });
+    });
+</script>

@@ -4,6 +4,18 @@
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-6">
+            <!-- Añadido: Mostrar mensajes flash -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
             <div class="card">
                 <div class="card-header bg-primary text-white">
                     <h4 class="mb-0">Verificar Código</h4>
@@ -16,6 +28,14 @@
                         <div class="mb-3">
                             {{ form.codigo.label(class="form-label") }}
                             {{ form.codigo(class="form-control") }}
+                            <!-- Añadido: Mostrar errores de validación -->
+                            {% if form.codigo.errors %}
+                                <div class="text-danger small mt-2">
+                                    {% for error in form.codigo.errors %}
+                                        {{ error }}<br>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
                         </div>
                         <button type="submit" class="btn btn-primary">Verificar</button>
                     </form>

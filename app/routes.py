@@ -1,4 +1,4 @@
-import os, io, csv
+import os, io, csv, time
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify, make_response, session
 from flask_jwt_extended import (
     current_user,
@@ -9,6 +9,8 @@ from flask_jwt_extended import (
     unset_jwt_cookies,
     verify_jwt_in_request
 )
+from flask_jwt_extended.exceptions import CSRFError
+from flask_wtf.csrf import validate_csrf
 from wtforms.validators import DataRequired
 
 import app
@@ -47,12 +49,15 @@ def user_lookup_callback(_jwt_header, jwt_data):
 #LOGIN DE USAURION
 @routes_bp.route('/login', methods=['GET', 'POST'])
 def login():
+    # Limpiar estado de inactividad previo
+    session.pop('last_activity', None)
+    session.pop('timeout', None)
+
     if request.method == 'POST':
         usuario = request.form.get('usuario')
         password = request.form.get('password')
 
         user = Usuario.query.filter_by(usuario=usuario).first()
-
 
         if user is None:
             log_event(
@@ -64,8 +69,31 @@ def login():
             flash('Usuario no encontrado', 'danger')
             return redirect(url_for('main.login'))
 
-        if user.check_password(password):
-            # REGISTRAR ACCESO EXITOSO
+        if user and user.check_password(password) and user.activo:
+            # Establecer tiempo de inactividad en sesión
+            session['last_activity'] = time.time()
+            config = Configuracion.obtener_config()
+            session['timeout'] = config.tiempo_inactividad * 60
+
+            # Si es nuevo usuario, redirigir a cambio de contraseña
+            if user.nuevo_user:
+                # Token con expiración estándar
+                access_token = create_access_token(
+                    identity=str(user.id),
+                    expires_delta=timedelta(minutes=current_app.config['JWT_ACCESS_TOKEN_EXPIRES'])
+                )
+                response = redirect(url_for('main.cambiar_contrasena_primera_vez'))
+                set_access_cookies(response, access_token)
+                return response
+
+            # Crear token de acceso con tiempo de expiración configurable
+            additional_claims = {"rol": user.rol}
+            access_token = create_access_token(
+                identity=str(user.id),
+                additional_claims=additional_claims,
+                expires_delta=timedelta(minutes=current_app.config['JWT_ACCESS_TOKEN_EXPIRES'])
+            )
+
             log_event(
                 user=user,
                 event_type='login_success',
@@ -73,40 +101,32 @@ def login():
                 details=f'Inicio de sesión exitoso - IP: {request.remote_addr}'
             )
 
-            # Si es nuevo usuario, redirigir a cambio de contraseña
-            if user.nuevo_user:
-                access_token = create_access_token(identity=str(user.id))
-                response = redirect(url_for('main.cambiar_contrasena_primera_vez'))
-                set_access_cookies(response, access_token)
-                return response
-
-            additional_claims = {"rol": user.rol}
-            access_token = create_access_token(identity=str(user.id), additional_claims=additional_claims)
-
+            # Preparar respuesta de redirección
             response = redirect(
                 url_for('admin.admin_dashboard') if user.rol == 'admin'
-                else url_for('main.user_dashboard')  # Nueva ruta para usuarios
+                else url_for('main.user_dashboard')
             )
             set_access_cookies(response, access_token)
             return response
+
         else:
-            # REGISTRAR INTENTO FALLIDO
+            # Manejar usuario inactivo o contraseña incorrecta
+            if not user.activo:
+                log_msg = f'Usuario: {usuario} - Desactivado - IP: {request.remote_addr}'
+                flash('Usuario Desactivado', 'danger')
+            else:
+                log_msg = f'Contraseña incorrecta para usuario: {usuario} - IP: {request.remote_addr}'
+                flash('Credenciales inválidas', 'danger')
+
             log_event(
                 user=user,
                 event_type='login_failed',
                 endpoint='main.login',
-                details=f'Contraseña incorrecta para usuario: {usuario} - IP: {request.remote_addr}'
+                details=log_msg
             )
-            flash('Credenciales inválidas', 'danger')
+            return render_template('auth/login.html')
 
-            # Registrar acceso a la página de login
-        log_event(
-            user=None,
-            event_type='page_access',
-            endpoint='main.login',
-            details='Acceso a página de login'
-        )
-
+    # Método GET
     return render_template('auth/login.html')
 
 #CAMBIO DE CONTRASEÑA
@@ -162,6 +182,10 @@ def solicitar_recuperacion_contrasena():
     if form.validate_on_submit():
         usuario_o_email = form.usuario_o_email.data
         user = Usuario.query.filter((Usuario.usuario == usuario_o_email) | (Usuario.email == usuario_o_email)).first()
+
+        if not user:
+            flash('No se encontró una cuenta con ese usuario o correo', 'danger')
+            return redirect(url_for('main.solicitar_recuperacion_contrasena'))
 
         if user:
             # Generar token de recuperación
@@ -237,6 +261,11 @@ def establecer_nueva_contrasena():
 
         flash('Su contraseña ha sido cambiada exitosamente. Por favor inicie sesión.', 'success')
         return redirect(url_for('main.login'))
+    else:
+        # Enviar errores de validación al template
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f"Error en {getattr(form, field).label.text}: {error}", 'danger')
 
     return render_template('auth/establecer_nueva_contrasena.html', form=form)
 
@@ -433,6 +462,12 @@ def logout():
         )
         pass
 
+    # Limpiar datos de actividad
+    if 'last_activity' in session:
+        del session['last_activity']
+    if 'timeout' in session:
+        del session['timeout']
+
     # Siempre limpiar las cookies y redirigir
     response = redirect(url_for('main.login'))
     unset_jwt_cookies(response)
@@ -538,8 +573,11 @@ def crear_usuario():
                                        accion='Crear',
                                        current_user=current_user)
 
-            # Generar contraseña temporal segura
-            contrasena_temporal = generar_contrasena_temporal()
+            # MODIFICACIÓN: Usar contraseña del formulario si existe, o generar temporal
+            if form.password.data:  # Si el administrador escribió una contraseña
+                contrasena = form.password.data
+            else:  # Si está vacío, generar temporal
+                contrasena = generar_contrasena_temporal()
 
             # Crear nuevo usuario
             nuevo_usuario = Usuario(
@@ -554,14 +592,14 @@ def crear_usuario():
                 nuevo_user=True
             )
 
-            # Establecer contraseña temporal
-            nuevo_usuario.set_password(contrasena_temporal)
+            # Establecer contraseña (la del formulario o la temporal)
+            nuevo_usuario.set_password(contrasena)
 
             db.session.add(nuevo_usuario)
             db.session.commit()
 
             # Enviar correo de bienvenida
-            if enviar_correo_bienvenida(nuevo_usuario, contrasena_temporal):
+            if enviar_correo_bienvenida(nuevo_usuario, contrasena):
                 log_event(
                     current_user,
                     'email_bienvenida_enviado',
@@ -879,12 +917,6 @@ def configuracion():
 @routes_bp.route('/perfil')
 @jwt_required()
 def perfil_usuario():
-    log_event(
-        user=current_user,
-        event_type='profile_access',
-        endpoint='main.perfil_usuario',
-        details='Acceso a perfil de usuario'
-    )
     try:
         user_id = get_jwt_identity()
         usuario = Usuario.query.options(
@@ -893,9 +925,12 @@ def perfil_usuario():
 
         if not usuario:
             flash('Usuario no encontrado', 'danger')
-            return redirect(url_for('main.user_dashboard' if usuario.rol == 'user' else 'admin.admin_dashboard'))
+            return redirect(url_for('main.login'))  # Redirigir a login si no hay usuario
 
-        tiene_solicitud = db.session.query(SolicitudBaja).filter(SolicitudBaja.usuario_id == user_id, SolicitudBaja.estado == 'pendiente').first() is not None
+        # Obtener solicitud más reciente (independientemente del estado)
+        solicitud = SolicitudBaja.query.filter_by(
+            usuario_id=user_id
+        ).order_by(SolicitudBaja.fecha_solicitud.desc()).first()
 
         # Determinar template según rol
         template = 'admin/perfil.html' if usuario.rol == 'admin' else 'user/perfil.html'
@@ -903,62 +938,101 @@ def perfil_usuario():
         return render_template(
             template,
             usuario=usuario,
-            tiene_solicitud_pendiente=tiene_solicitud,
+            tiene_solicitud_pendiente=solicitud.estado == 'pendiente' if solicitud else False,
             es_admin=usuario.rol == 'admin',
-            current_user=current_user
+            current_user=current_user,
+            fecha=solicitud.fecha_solicitud if solicitud else None
         )
 
     except Exception as e:
-        print(f"ERROR en perfil_usuario: {str(e)}")
+        current_app.logger.error(f"Error en perfil_usuario: {str(e)}", exc_info=True)
         flash('Error al cargar el perfil', 'danger')
-        return redirect(url_for('main.user_dashboard' if current_user.rol == 'user' else 'admin.admin_dashboard'))
-
+        return redirect(url_for('main.login'))
 
 # Solicitud de baja
 @routes_bp.route('/solicitar_baja', methods=['POST'])
 @jwt_required()
 def solicitar_baja():
     try:
-        user_id = get_jwt_identity()
-        motivo = request.form.get('motivo')
+        # 1. Verificación CSRF
+        form_token = request.form.get('csrf_token')
+        if not form_token:
+            flash('Token CSRF faltante', 'danger')
+            return redirect(url_for('main.perfil_usuario'))
 
-        solicitud = SolicitudBaja(
+        try:
+            validate_csrf(form_token)
+        except:
+            flash('Token CSRF inválido', 'danger')
+            return redirect(url_for('main.perfil_usuario'))
+
+        # 2. Validación del motivo
+        motivo = request.form.get('motivo', '').strip()
+        if not motivo:
+            flash('El motivo no puede estar vacío', 'danger')
+            return redirect(url_for('main.perfil_usuario'))
+
+        # 3. Verificar solicitud existente
+        user_id = get_jwt_identity()
+        if SolicitudBaja.query.filter_by(
+                usuario_id=user_id,
+                estado='pendiente'
+        ).first():
+            flash('Ya tienes una solicitud pendiente', 'warning')
+            return redirect(url_for('main.perfil_usuario'))
+
+        # 4. Crear solicitud
+        nueva_solicitud = SolicitudBaja(
             usuario_id=user_id,
             motivo=motivo
         )
-        db.session.add(solicitud)
-        db.session.commit()
 
+        db.session.add(nueva_solicitud)
+        db.session.commit()
         log_event(current_user, 'deactivation_request', request.endpoint,
                   f"Solicitud baja usuario {user_id}")
-        flash('Solicitud enviada correctamente', 'success')
+        flash('Solicitud de baja registrada correctamente', 'success')
+        return redirect(url_for('main.perfil_usuario'))
+
     except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error en solicitar_baja: {str(e)}", exc_info=True)
         log_event(current_user, 'error', request.endpoint, str(e))
-        flash('Error al enviar solicitud', 'danger')
-
-    return redirect(url_for('main.perfil_usuario'))
-
+        flash('Error interno al procesar la solicitud', 'danger')
+        return redirect(url_for('main.perfil_usuario'))
 
 # Panel de solicitudes (Admin)
 @admin_bp.route('/solicitudes_de_baja')
 @jwt_required()
 @role_required(['admin'])
 def solicitudes_de_baja():
-    log_event(
-        user=current_user,
-        event_type='admin_access',
-        endpoint='admin.solicitudes_de_baja',
-        details='Acceso a panel de solicitudes de baja'
-    )
-    # CORRECCIÓN: Cargar relaciones usando joinedload
-    solicitudes = SolicitudBaja.query.options(
-        joinedload(SolicitudBaja.usuario),
-        joinedload(SolicitudBaja.admin)
-    ).filter_by(estado='pendiente').all()
+    try:
+        # Verificación adicional de usuario
+        if not current_user or not hasattr(current_user, 'rol') or current_user.rol != 'admin':
+            flash('Acceso no autorizado', 'danger')
+            return redirect(url_for('main.login'))
 
-    return render_template('admin/solicitudes_baja.html',
+        log_event(
+            user=current_user,
+            event_type='admin_access',
+            endpoint='admin.solicitudes_de_baja',
+            details='Acceso a panel de solicitudes de baja'
+        )
+
+        # Solo mostrar solicitudes pendientes
+        solicitudes = SolicitudBaja.query.options(
+            joinedload(SolicitudBaja.usuario),
+            joinedload(SolicitudBaja.admin)
+        ).all()
+
+        return render_template('admin/solicitudes_baja.html',
                            solicitudes=solicitudes,
                            current_user=current_user)
+
+    except Exception as e:
+        current_app.logger.error(f"Error en solicitudes_de_baja: {str(e)}", exc_info=True)
+        flash('Error al cargar solicitudes', 'danger')
+        return redirect(url_for('admin.admin_dashboard'))
 
 
 # Procesar solicitud (Admin)
@@ -966,82 +1040,207 @@ def solicitudes_de_baja():
 @jwt_required()
 @role_required(['admin'])
 def procesar_solicitud(id):
-    log_event(
-        user=current_user,
-        event_type='admin_action',
-        endpoint='admin.procesar_solicitud',
-        details=f'Inicio de procesamiento de solicitud ID: {id}'
-    )
     try:
         admin_id = get_jwt_identity()
-        accion = request.form.get('accion')
-        observaciones = request.form.get('observaciones', '')
+        accion = str(request.form.get('accion'))
+        observaciones = request.form.get('observaciones', '').strip()
 
-        # Usar stored procedure
-        db.engine.execute(
-            "EXEC sp_gestion_baja_usuario ?, ?, ?, ?",
-            (id, admin_id, accion, observaciones)
+        if not accion or accion not in ["aprobar", "rechazar"]:
+            flash('Acción no válida', 'danger')
+            return redirect(url_for('admin.solicitudes_de_baja'))
+
+        if not observaciones:
+            flash('Debe ingresar observaciones', 'danger')
+            return redirect(url_for('admin.solicitudes_de_baja'))
+
+        # Ejecutar SP con parámetros nombrados
+        db.session.execute(
+            text("EXEC sp_gestion_baja_usuario :solicitud_id, :admin_id, :accion, :observaciones"),
+            {
+                'solicitud_id': id,
+                'admin_id': admin_id,
+                'accion': accion,
+                'observaciones': observaciones
+            }
+        )
+        db.session.commit()
+
+        print("EXEC sp_gestion_baja_usuario :solicitud_id, :admin_id, :accion, :observaciones")
+        print("solicitud_id: ", id)
+        print("admin_id: ", admin_id)
+        print("accion: ", accion)
+        print(type(accion))
+        print("observaciones: ",observaciones)
+
+        # Registrar en logs
+        log_event(
+            current_user,
+            f'solicitud_{accion}ada',
+            request.endpoint,
+            f"Solicitud ID {id} {accion}ada por admin ID {admin_id}"
         )
 
-        # Enviar email
-        usuario = Usuario.query.get(id)
-        enviar_notificacion_baja(usuario, accion, observaciones)
+        # Enviar notificación por correo
+        solicitud = SolicitudBaja.query.get(id)
+        if solicitud and solicitud.usuario:
+            enviar_notificacion_baja(
+                solicitud.usuario,
+                accion,
+                observaciones
+            )
 
-        log_event(current_user, f'request_{accion}', request.endpoint,
-                  f"Solicitud {id} {accion} por admin {admin_id}")
-        flash(f'Solicitud {accion} correctamente', 'success')
+        flash(f'Solicitud {accion}ada correctamente', 'success')
+        return redirect(url_for('admin.solicitudes_de_baja'))
+
     except Exception as e:
-        log_event(current_user, 'error', request.endpoint, str(e))
-        flash('Error al procesar solicitud', 'danger')
-
-    return redirect(url_for('admin.solicitudes_baja'))
+        db.session.rollback()
+        current_app.logger.error(f"Error procesando solicitud: {str(e)}", exc_info=True)
+        log_event(
+            current_user,
+            'error_procesar_solicitud',
+            request.endpoint,
+            f"Error al procesar solicitud ID {id}: {str(e)}"
+        )
+        flash('Error al procesar la solicitud', 'danger')
+        return redirect(url_for('admin.solicitudes_de_baja'))
 
 
 @routes_bp.route('/cancelar_solicitud', methods=['POST'])
 @role_required(['user'])
 def cancelar_solicitud():
-    log_event(
-        user=current_user,
-        event_type='user_action',
-        endpoint='main.cancelar_solicitud',
-        details='Intento de cancelación de solicitud de baja'
-    )
     try:
+        # Validar token CSRF
+        validate_csrf(request.form.get('csrf_token'))
+
         user_id = get_jwt_identity()
 
-        # Buscar y eliminar la solicitud pendiente
+        # Buscar la solicitud pendiente
         solicitud = SolicitudBaja.query.filter_by(
             usuario_id=user_id,
             estado='pendiente'
         ).first()
 
-
-
         if solicitud:
-            db.session.delete(solicitud)
+            # Cambiar el estado a "cancelada" en lugar de eliminar
+            solicitud.estado = 'cancelada'
+            solicitud.fecha_resolucion = datetime.utcnow()
+            solicitud.observaciones = 'Cancelada por el usuario'
+
             db.session.commit()
+
             log_event(
                 current_user,
                 'solicitud_cancelada',
                 request.endpoint,
-                f"Solicitud cancelada por usuario {user_id}"
+                f"Solicitud {solicitud.id} cancelada por usuario {user_id}"
             )
-            flash('Solicitud de baja cancelada correctamente', 'success')
+            flash('Solicitud de baja marcada como cancelada', 'success')
         else:
             log_event(
                 current_user,
                 'solicitud_cancelada_erronea',
                 request.endpoint,
-                f"No se pudo realizar la acción de cancelación por usuario {user_id}"
+                f"No se encontró solicitud pendiente para usuario {user_id}"
             )
             flash('No se encontró solicitud pendiente para cancelar', 'warning')
 
     except Exception as e:
         db.session.rollback()
-        print(f"Error al cancelar solicitud: {str(e)}")
-        flash('Error al cancelar la solicitud', 'danger')
+        current_app.logger.error(f"Error al cancelar solicitud: {str(e)}", exc_info=True)
+        flash('Error técnico al cancelar la solicitud', 'danger')
 
     return redirect(url_for('main.perfil_usuario'))
+
+@routes_bp.route('/check-session')
+@jwt_required(optional=True)
+def check_session():
+    try:
+        # Verificar si el token JWT es válido
+        if get_jwt_identity():
+            return jsonify({'active': True})
+
+        # Si no hay token JWT válido, verificar inactividad
+        config = Configuracion.obtener_config()
+        timeout = config.tiempo_inactividad * 60
+
+        last_activity = session.get('last_activity')
+        if not last_activity:
+            # Redirigir directamente a session-expired
+            return redirect(url_for('main.session_expired'))
+
+        # Manejar tipos
+        if isinstance(last_activity, str):
+            try:
+                last_activity = float(last_activity)
+            except (ValueError, TypeError):
+                return redirect(url_for('main.session_expired'))
+
+        # Calcular tiempo inactivo
+        current_time = time.time()
+        inactive_seconds = current_time - last_activity
+
+        if inactive_seconds > timeout:
+            return redirect(url_for('main.session_expired'))
+
+        return jsonify({'active': True})
+
+    except jwt.ExpiredSignatureError:
+        return redirect(url_for('main.session_expired'))
+    except Exception as e:
+        current_app.logger.error(f"Error en check-session: {str(e)}")
+        return jsonify({'active': True})
+
+@routes_bp.route('/session-expired')
+def session_expired():
+    """Página que muestra que la sesión ha expirado y redirige a login"""
+    # Limpiar completamente la sesión
+    session.clear()
+
+    # Preparar respuesta limpiando cookies
+    response = make_response(render_template('session_expired.html'))
+    unset_jwt_cookies(response)
+    response.delete_cookie('session')
+
+    # Redirección automática después de 5 segundos
+    response.headers['Refresh'] = '5; url=' + url_for('main.login')
+
+    return response
+
+
+@routes_bp.route('/update-activity', methods=['POST'])
+@jwt_required(optional=True)
+def update_activity():
+    try:
+        # Obtener el tiempo actual
+        current_time = time.time()
+
+        # Verificar si ya existe una última actividad
+        if 'last_activity' in session:
+            # Calcular tiempo inactivo
+            last_activity = session['last_activity']
+
+            # Manejar tipos
+            if isinstance(last_activity, str):
+                try:
+                    last_activity = float(last_activity)
+                except (ValueError, TypeError):
+                    last_activity = current_time
+
+            # Calcular tiempo inactivo
+            inactive_seconds = current_time - last_activity
+            timeout = Configuracion.obtener_config().tiempo_inactividad * 60
+
+            # Si ya ha expirado, no actualizar
+            if inactive_seconds > timeout:
+                return jsonify({'success': False, 'reason': 'session expired'}), 400
+
+        # Actualizar el tiempo solo si no ha expirado
+        session['last_activity'] = current_time
+        return jsonify({'success': True})
+
+    except Exception as e:
+        current_app.logger.error(f"Error en update-activity: {str(e)}")
+        return jsonify({'success': False}), 500
 
 @routes_bp.route('/')
 def home():

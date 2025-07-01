@@ -11,19 +11,33 @@ def role_required(roles):
         @wraps(fn)
         def wrapper(*args, **kwargs):
             try:
+                # Verificar JWT primero
                 verify_jwt_in_request()
-                user_id = get_jwt_identity()
-                current_user = Usuario.query.get(user_id)
 
-                if not current_user or current_user.rol not in roles:
-                    flash('Acceso no autorizado', 'danger')
-                    current_app.logger.warning(
-                        f"Intento de acceso no autorizado a {request.path} por {current_user.usuario if current_user else 'anonimo'}")
-                    return redirect(url_for('admin.admin_dashboard'))
+                # Obtener identidad
+                user_id = get_jwt_identity()
+                if not user_id:
+                    current_app.logger.warning("Intento de acceso sin user_id válido")
+                    flash('Sesión inválida', 'danger')
+                    return redirect(url_for('main.login'))
+
+                # Obtener usuario
+                current_user = Usuario.query.get(user_id)
+                if not current_user:
+                    current_app.logger.warning(f"Usuario no encontrado: {user_id}")
+                    flash('Usuario no existe', 'danger')
+                    return redirect(url_for('main.login'))
+
+                # Verificar rol
+                if not hasattr(current_user, 'rol') or current_user.rol not in roles:
+                    current_app.logger.warning(f"Acceso denegado a {current_user.usuario} para roles {roles}")
+                    flash('No tienes permisos para esta sección', 'danger')
+                    return redirect(url_for('main.login'))
 
                 return fn(*args, **kwargs)
+
             except Exception as e:
-                current_app.logger.error(f"Error en role_required: {str(e)}")
+                current_app.logger.error(f"Error en role_required: {str(e)}", exc_info=True)
                 flash('Error de autenticación', 'danger')
                 return redirect(url_for('main.login'))
 

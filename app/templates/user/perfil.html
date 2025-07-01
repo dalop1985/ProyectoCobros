@@ -1,63 +1,109 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
+<div class="container-fluid">
     <div class="card shadow">
         <div class="card-header bg-primary text-white">
             <div class="d-flex justify-content-between align-items-center">
-                <h4>Mi Perfil</h4>
-                <a href="{{ url_for('main.user_dashboard') }}" class="btn btn-sm btn-light">
-                    <i class="fas fa-arrow-left"></i> Regresar
+                <h4>Perfil de {{ 'Administrador' if es_admin else 'Usuario' }}</h4>
+                <a href="{{ url_for('admin.admin_dashboard' if es_admin else 'main.user_dashboard') }}"
+                   class="btn btn-sm btn-light">
+                    <i class="fas fa-arrow-left"></i> Volver
                 </a>
             </div>
         </div>
         <div class="card-body">
-            {% include 'partials/perfil_content.html' %}
-
-            <!-- Sección específica para usuarios normales -->
-            {% if usuario.rol == 'user' %}
-            <div class="mt-4">
-                {% if not tiene_solicitud_pendiente %}
-                <button class="btn btn-danger mt-3" data-bs-toggle="modal" data-bs-target="#modalBaja">
-                    <i class="fas fa-user-times"></i> Solicitar Baja
-                </button>
-                {% else %}
-                <div class="alert alert-warning mt-3">
-                    <i class="fas fa-exclamation-triangle"></i> Tiene una solicitud de baja pendiente
-                    <form method="POST" action="{{ url_for('main.cancelar_solicitud') }}" class="mt-2">
-                        <button type="submit" class="btn btn-sm btn-secondary">
-                            <i class="fas fa-times-circle"></i> Cancelar Solicitud
-                        </button>
-                    </form>
+            <!-- Datos del usuario -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-user"></i> Información Personal</h5>
+                    <ul class="list-group">
+                        <li class="list-group-item"><strong>Usuario:</strong> {{ usuario.usuario }}</li>
+                        <li class="list-group-item"><strong>Nombre:</strong> {{ usuario.nombre_completo() }}</li>
+                        <li class="list-group-item"><strong>Email:</strong> {{ usuario.email }}</li>
+                        <li class="list-group-item">
+                            <strong>Estado:</strong>
+                            <span class="badge bg-{{ 'success' if usuario.activo else 'danger' }}">
+                                {{ 'Activo' if usuario.activo else 'Inactivo' }}
+                            </span>
+                        </li>
+                    </ul>
                 </div>
+                <div class="col-md-6">
+                    <h5><i class="fas fa-calendar-alt"></i> Datos Adicionales</h5>
+                    <ul class="list-group">
+                        <li class="list-group-item">
+                            <strong>Fecha de Nacimiento:</strong>
+                            {{ usuario.fecha_nacimiento.strftime('%d/%m/%Y') if usuario.fecha_nacimiento else 'N/A' }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Registro:</strong>
+                            {{ usuario.creado_en.strftime('%d/%m/%Y') }}
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Rol:</strong>
+                            <span class="badge bg-{{ 'danger' if es_admin else 'primary' }}">
+                                {{ usuario.rol | capitalize }}
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Sección de solicitud de baja -->
+            {% if fecha %}
+            <div class="alert alert-{% if tiene_solicitud_pendiente %}warning{% else %}info{% endif %} mt-3">
+                <i class="fas fa-{% if tiene_solicitud_pendiente %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                Solicitud {{ 'pendiente' if tiene_solicitud_pendiente else 'cancelada' }}
+                el {{ fecha.strftime('%d/%m/%Y') }}
+
+                {% if tiene_solicitud_pendiente %}
+                <form method="POST" action="{{ url_for('main.cancelar_solicitud') }}" class="mt-2">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-secondary">
+                        <i class="fas fa-times-circle"></i> Cancelar Solicitud
+                    </button>
+                </form>
                 {% endif %}
             </div>
             {% endif %}
+
+            <!-- Botones de acción -->
+            <div class="mt-4">
+                <a href="{{ url_for('main.cambiar_contrasena_primera_vez') }}" class="btn btn-primary me-2">
+                    <i class="fas fa-key"></i> Cambiar Contraseña
+                </a>
+
+                {% if not tiene_solicitud_pendiente %}
+                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalSolicitudBaja">
+                    <i class="fas fa-user-times"></i> Solicitar Baja
+                </button>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Modal Solicitud Baja -->
-<div class="modal fade" id="modalBaja" tabindex="-1">
+<!-- Modal para solicitud de baja -->
+<div class="modal fade" id="modalSolicitudBaja">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="bi bi-person-x"></i> Solicitar Baja del Sistema</h5>
-            </div>
             <form method="POST" action="{{ url_for('main.solicitar_baja') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Solicitar Baja del Sistema</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Motivo de la baja:</label>
-                        <textarea name="motivo" class="form-control" placeholder="Explique el motivo de su solicitud de baja" required rows="4"></textarea>
+                        <label class="form-label">Motivo:</label>
+                        <textarea name="motivo" class="form-control" rows="3" required
+                                  placeholder="Explique el motivo de su solicitud de baja"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-lg"></i> Cancelar
-                    </button>
-                    <button type="submit" class="btn btn-danger">
-                        <i class="bi bi-send"></i> Enviar Solicitud
-                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Enviar Solicitud</button>
                 </div>
             </form>
         </div>

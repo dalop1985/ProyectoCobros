@@ -4,6 +4,18 @@
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-6">
+            <!-- Añadido: Mostrar mensajes flash
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %} -->
+
             <div class="card">
                 <div class="card-header bg-primary text-white">
                     <h4 class="mb-0">Recuperar Contraseña</h4>
@@ -15,12 +27,28 @@
                         <div class="mb-3">
                             {{ form.usuario_o_email.label(class="form-label") }}
                             {{ form.usuario_o_email(class="form-control") }}
+                            <!-- Añadido: Mostrar errores de validación -->
+                            {% if form.usuario_o_email.errors %}
+                                <div class="text-danger small mt-2">
+                                    {% for error in form.usuario_o_email.errors %}
+                                        {{ error }}<br>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
                         </div>
-                        
+
                         {% if intentos > 2 %}
                         <div class="mb-3">
                             {{ form.captcha.label(class="form-label") }}
                             {{ form.captcha(class="form-control") }}
+                            <!-- Añadido: Mostrar errores de validación -->
+                            {% if form.captcha.errors %}
+                                <div class="text-danger small mt-2">
+                                    {% for error in form.captcha.errors %}
+                                        {{ error }}<br>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
                             <small class="form-text text-muted">Complete el captcha para continuar</small>
                         </div>
                         {% endif %}

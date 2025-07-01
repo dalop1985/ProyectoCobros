@@ -1,19 +1,34 @@
 {% extends "admin/base_admin.html" %}
 
 {% block content %}
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 <div class="container-fluid">
     <div class="card shadow">
         <div class="card-header bg-primary text-white">
             <h4>Solicitudes de Baja</h4>
         </div>
         <div class="card-body">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
             <table class="table table-striped">
                 <thead>
                     <tr>
                         <th>Usuario</th>
-                        <th>Fecha</th>
+                        <th>Fecha Solicitud</th>
                         <th>Motivo</th>
+                        <th>Estado</th>
+                        <th>Fecha Resolución</th>
                         <th>Acciones</th>
+                        <th>Observaciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -21,10 +36,27 @@
                     <tr>
                         <td>{{ solicitud.usuario.usuario }}</td>
                         <td>{{ solicitud.fecha_solicitud.strftime('%d/%m/%Y') }}</td>
-                        <td>{{ solicitud.motivo[:50] }}...</td>
+                        <td>{{ solicitud.motivo[:50] }}{% if solicitud.motivo|length > 50 %}...{% endif %}</td>
                         <td>
-                            <button class="btn btn-success btn-sm" 
-                                    data-bs-toggle="modal" 
+                            {% if solicitud.estado == 'pendiente' %}
+                                <span class="badge bg-warning">Pendiente</span>
+                            {% elif solicitud.estado == 'aprobada' %}
+                                <span class="badge bg-success">Aprobada</span>
+                            {% else %}
+                                <span class="badge bg-danger">Rechazada</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if solicitud.fecha_resolucion %}
+                                {{ solicitud.fecha_resolucion.strftime('%d/%m/%Y') }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if solicitud.estado == 'pendiente' %}
+                            <button class="btn btn-success btn-sm"
+                                    data-bs-toggle="modal"
                                     data-bs-target="#modalResolver{{ solicitud.id }}"
                                     data-accion="aprobar">
                                 Aprobar
@@ -35,6 +67,14 @@
                                     data-accion="rechazar">
                                 Rechazar
                             </button>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if solicitud.observaciones %}
+                                {{ solicitud.observaciones[:25] }}{% if solicitud.observaciones|length > 25 %}...{% endif %}
+                            {% else %}
+                                -
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
@@ -44,17 +84,23 @@
     </div>
 </div>
 
-{% for solicitud in solicitudes %}
+{% for solicitud in solicitudes if solicitud.estado == 'pendiente' %}
 <!-- Modal Resolver -->
 <div class="modal fade" id="modalResolver{{ solicitud.id }}">
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="POST" action="{{ url_for('admin.procesar_solicitud', id=solicitud.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="modal-header">
-                    <h5 class="modal-title">Resolver Solicitud</h5>
+                    <h5 class="modal-title">Resolver Solicitud de {{ solicitud.usuario.usuario }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <textarea name="observaciones" class="form-control" placeholder="Observaciones" required></textarea>
+                    <div class="mb-3">
+                        <label class="form-label">Observaciones:</label>
+                        <textarea name="observaciones" class="form-control" required
+                                  placeholder="Detalle la razón de la decisión"></textarea>
+                    </div>
                     <input type="hidden" name="accion" id="accion{{ solicitud.id }}">
                 </div>
                 <div class="modal-footer">
@@ -67,9 +113,12 @@
 </div>
 
 <script>
-    document.querySelectorAll('[data-bs-target="#modalResolver{{ solicitud.id }}"]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.getElementById('accion{{ solicitud.id }}').value = btn.getAttribute('data-accion');
+    document.addEventListener('DOMContentLoaded', function() {
+        // Configurar la acción al hacer clic en los botones
+        document.querySelectorAll('[data-bs-target="#modalResolver{{ solicitud.id }}"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.getElementById('accion{{ solicitud.id }}').value = btn.getAttribute('data-accion');
+            });
         });
     });
 </script>

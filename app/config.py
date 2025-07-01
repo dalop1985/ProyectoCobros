@@ -21,7 +21,7 @@ class Config:
     JWT_ACCESS_COOKIE_NAME = 'access_token'
     JWT_ACCESS_CSRF_HEADER_NAME = "X-CSRF-TOKEN"
     JWT_SESSION_COOKIE = False
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
+    JWT_ACCESS_TOKEN_EXPIRES = 15  # 15 minutos
     JWT_COOKIE_SAMESITE = 'Lax'
 
     # Configuración mejorada de CSRF

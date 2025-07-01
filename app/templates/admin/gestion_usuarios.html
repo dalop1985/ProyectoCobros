@@ -103,7 +103,7 @@
                     </tbody>
                 </table>
             </div>
-            
+
             <!-- Paginación -->
             <nav aria-label="Pagination">
                 <ul class="pagination justify-content-center">
@@ -112,13 +112,13 @@
                         <a class="page-link" href="{{ url_for('admin.gestion_usuarios', page=usuarios.prev_num, busqueda=busqueda) }}">Anterior</a>
                     </li>
                     {% endif %}
-                    
+
                     {% for page_num in usuarios.iter_pages() %}
                     <li class="page-item {% if page_num == usuarios.page %}active{% endif %}">
                         <a class="page-link" href="{{ url_for('admin.gestion_usuarios', page=page_num, busqueda=busqueda) }}">{{ page_num }}</a>
                     </li>
                     {% endfor %}
-                    
+
                     {% if usuarios.has_next %}
                     <li class="page-item">
                         <a class="page-link" href="{{ url_for('admin.gestion_usuarios', page=usuarios.next_num, busqueda=busqueda) }}">Siguiente</a>

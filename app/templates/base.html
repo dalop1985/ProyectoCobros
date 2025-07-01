@@ -27,15 +27,108 @@
         {% block content %}{% endblock %}
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<!-- ... -->
     <script>
-        // Incluye el token CSRF en todas las peticiones AJAX
-        $.ajaxSetup({
-            beforeSend: function(xhr, settings) {
-                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
-                    xhr.setRequestHeader("X-CSRFToken", $('meta[name="csrf-token"]').attr('content'));
-                }
+        document.addEventListener('DOMContentLoaded', function() {
+            // Rutas donde NO activar el monitoreo
+            const excludedRoutes = [
+                "{{ url_for('main.login') }}",
+                "{{ url_for('main.session_expired') }}",
+                "{{ url_for('main.solicitar_recuperacion_contrasena') }}",
+                "{{ url_for('main.establecer_nueva_contrasena') }}",
+                "{{ url_for('main.verificar_codigo_recuperacion', token_id=0) }}".replace('/0', '')
+            ];
+
+            // Verificar si estamos en ruta excluida
+            const currentPath = window.location.pathname;
+            const isExcluded = excludedRoutes.some(route => currentPath.startsWith(route));
+
+            if (isExcluded) {
+                return;
             }
+
+            // Bandera para evitar múltiples redirecciones
+            let sessionExpired = false;
+            // Tiempo de verificación (más frecuente que el timeout)
+            const checkInterval = 10000; // 10 segundos
+            let lastCheck = 0;
+
+            // Función para verificar el estado de la sesión
+            const checkSession = () => {
+                if (sessionExpired) return;
+
+                // Evitar verificar demasiado rápido
+                const now = Date.now();
+                if (now - lastCheck < 3000) return;
+                lastCheck = now;
+
+                fetch('/check-session', {
+                    credentials: 'same-origin',
+                    headers: {
+                        'Cache-Control': 'no-cache'
+                    }
+                })
+                .then(response => {
+                    // Si recibimos una redirección, seguirla directamente
+                    if (response.redirected) {
+                        sessionExpired = true;
+                        window.location.href = response.url;
+                        return;
+                    }
+
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta del servidor');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && !data.active) {
+                        sessionExpired = true;
+                        console.log('Sesión expirada, forzando recarga...');
+                        // Forzar recarga completa de la página
+                        window.location.reload(true);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al verificar sesión:', error);
+                });
+            };
+
+            // Función para actualizar la actividad
+            const updateActivity = () => {
+                if (sessionExpired) return;
+
+                fetch('/update-activity', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                }).catch(error => {
+                    console.error('Error al actualizar actividad:', error);
+                });
+            };
+
+            // Eventos que actualizan la actividad
+            const activityEvents = ['keydown', 'click'];
+            activityEvents.forEach(event => {
+                document.addEventListener(event, () => {
+                    if (!sessionExpired) updateActivity();
+                });
+            });
+
+            // Verificar el estado de la sesión periódicamente
+            const sessionChecker = setInterval(checkSession, checkInterval);
+
+            // Verificar inmediatamente al cargar
+            setTimeout(checkSession, 1000);
+
+            // Manejar cuando la pestaña gana foco
+            window.addEventListener('focus', () => {
+                if (!sessionExpired) {
+                    updateActivity();
+                    checkSession();
+                }
+            });
         });
     </script>
 </body>
